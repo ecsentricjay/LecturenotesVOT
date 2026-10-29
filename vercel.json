@@ -1,0 +1,13 @@
+{
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/groq/(.*)",
+      "destination": "/api/groq/$1"
+    },
+    {
+      "source": "/((?!api/|groq/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

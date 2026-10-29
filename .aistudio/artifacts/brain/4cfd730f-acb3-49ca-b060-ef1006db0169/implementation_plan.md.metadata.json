@@ -1,0 +1,6 @@
+{
+  "summary":  "Implementation plan for the minimalist, front-end-only voice-to-text lecture note generator with client-side Whisper proxy, pure JS TF-IDF NLP structuring, DOCX/PDF export, interactive topic cards, demo mode, and localStorage history.",
+  "updatedAt":  "2026-10-29T07:13:52.333308989Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

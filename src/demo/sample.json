@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "courseTitle": "Artificial Intelligence & Neural Systems",
+    "courseCode": "CSC 411",
+    "lecturer": "Prof. Katherine Vance",
+    "date": "2026-10-29",
+    "lectureTopic": "Deep Neural Architectures & Backpropagation"
+  },
+  "fullTranscript": "Welcome everyone to CSC 411. Today we are exploring the foundational mechanics of deep neural architectures and the mathematical formulation of backpropagation. Artificial neural networks draw conceptual inspiration from biological neural pathways, yet their mathematical execution is fundamentally grounded in linear algebra, multivariable calculus, and optimization theory. A single artificial neuron computes a weighted combination of its inputs, adds a scalar bias parameter, and applies a non-linear activation function. Without non-linear activation functions such as ReLU, GELU, or the logistic sigmoid, any multi-layer deep network collapses algebraically into a single trivial linear transformation. When we assemble these computational units into deep multi-layer perceptrons, forward propagation transforms the input vector through successive parameterized hidden layers. Each layer executes high-dimensional matrix multiplications followed by element-wise activations to construct increasingly abstract hierarchical representations. In computer vision, early layers learn low-level edge detectors, intermediate layers assemble geometric contours, and terminal layers recognize semantic objects. To train such complex parameterized systems, we define a scalar objective function, typically cross-entropy loss for classification or mean squared error for continuous regression. The central optimization objective is to minimize this loss surface across millions of parameters using stochastic gradient descent and adaptive optimizers like Adam. Backpropagation provides the computationally tractable algorithm to evaluate the gradient of the loss function with respect to every individual weight. It operates via the multivariate chain rule of calculus, systematically propagating error signals backward from the terminal output layer to initial input layers. During the backward pass, each neuron computes local partial derivatives and multiplies them by upstream gradient tensors. However, early deep architectures suffered severely from vanishing and exploding gradients in deep computational graphs. When gradients pass through dozens of saturating non-linearities, the magnitude of gradient updates attenuates exponentially toward zero, preventing initial layers from learning. Modern architectures resolve this limitation through techniques such as residual skip connections, layer normalization, and careful He parameter initialization. Residual networks enable identity mapping pathways that allow gradient signals to flow uninterrupted across hundreds of computational layers. In next week's practical laboratory session, we will implement these backpropagation equations directly in PyTorch and benchmark their convergence dynamics on modern hardware accelerators.",
+  "chunks": [
+    {
+      "chunkIndex": 1,
+      "duration": 30,
+      "text": "Welcome everyone to CSC 411. Today we are exploring the foundational mechanics of deep neural architectures and the mathematical formulation of backpropagation. Artificial neural networks draw conceptual inspiration from biological neural pathways, yet their mathematical execution is fundamentally grounded in linear algebra, multivariable calculus, and optimization theory. A single artificial neuron computes a weighted combination of its inputs, adds a scalar bias parameter, and applies a non-linear activation function. Without non-linear activation functions such as ReLU, GELU, or the logistic sigmoid, any multi-layer deep network collapses algebraically into a single trivial linear transformation."
+    },
+    {
+      "chunkIndex": 2,
+      "duration": 30,
+      "text": "When we assemble these computational units into deep multi-layer perceptrons, forward propagation transforms the input vector through successive parameterized hidden layers. Each layer executes high-dimensional matrix multiplications followed by element-wise activations to construct increasingly abstract hierarchical representations. In computer vision, early layers learn low-level edge detectors, intermediate layers assemble geometric contours, and terminal layers recognize semantic objects. To train such complex parameterized systems, we define a scalar objective function, typically cross-entropy loss for classification or mean squared error for continuous regression."
+    },
+    {
+      "chunkIndex": 3,
+      "duration": 30,
+      "text": "The central optimization objective is to minimize this loss surface across millions of parameters using stochastic gradient descent and adaptive optimizers like Adam. Backpropagation provides the computationally tractable algorithm to evaluate the gradient of the loss function with respect to every individual weight. It operates via the multivariate chain rule of calculus, systematically propagating error signals backward from the terminal output layer to initial input layers. During the backward pass, each neuron computes local partial derivatives and multiplies them by upstream gradient tensors."
+    },
+    {
+      "chunkIndex": 4,
+      "duration": 30,
+      "text": "However, early deep architectures suffered severely from vanishing and exploding gradients in deep computational graphs. When gradients pass through dozens of saturating non-linearities, the magnitude of gradient updates attenuates exponentially toward zero, preventing initial layers from learning. Modern architectures resolve this limitation through techniques such as residual skip connections, layer normalization, and careful He parameter initialization. Residual networks enable identity mapping pathways that allow gradient signals to flow uninterrupted across hundreds of computational layers. In next week's practical laboratory session, we will implement these backpropagation equations directly in PyTorch."
+    }
+  ]
+}

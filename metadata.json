@@ -1,0 +1,6 @@
+{
+  "name": "LectureNote AI",
+  "description": "Voice-to-text lecture note generator with automated topic segmentation, keyword extraction, and DOCX/PDF export.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
