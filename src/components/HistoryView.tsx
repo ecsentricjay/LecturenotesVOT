@@ -86,9 +86,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 pb-24 md:pb-8 max-w-5xl mx-auto space-y-4 sm:space-y-6">
       {/* Top Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
         <div className="relative flex-1 max-w-md w-full">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -96,11 +96,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search saved lectures by title, topic, or code..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 text-slate-900"
+            className="w-full pl-9 pr-3 py-2 sm:py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 text-slate-900"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           {sessions.length > 0 && (
             <button
               onClick={() => {

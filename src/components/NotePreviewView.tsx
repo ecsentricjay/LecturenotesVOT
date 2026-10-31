@@ -113,23 +113,23 @@ export const NotePreviewView: React.FC<NotePreviewViewProps> = ({
   const estimatedReadTimeMins = Math.ceil(totalWords / 200);
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 pb-24 md:pb-8 max-w-5xl mx-auto space-y-4 sm:space-y-6">
       {/* Top Action Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-lg">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveTab('structured')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+            className={`px-3 py-2 text-xs font-semibold rounded-md transition-colors cursor-pointer whitespace-nowrap min-h-[36px] ${
               activeTab === 'structured'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Structured Note ({sections.length} Topics)
+            Topics ({sections.length})
           </button>
           <button
             onClick={() => setActiveTab('raw')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+            className={`px-3 py-2 text-xs font-semibold rounded-md transition-colors cursor-pointer whitespace-nowrap min-h-[36px] ${
               activeTab === 'raw'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -139,13 +139,13 @@ export const NotePreviewView: React.FC<NotePreviewViewProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('glossary')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+            className={`px-3 py-2 text-xs font-semibold rounded-md transition-colors cursor-pointer whitespace-nowrap min-h-[36px] ${
               activeTab === 'glossary'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Keyword Glossary ({glossary.length})
+            Glossary ({glossary.length})
           </button>
         </div>
 
@@ -154,18 +154,18 @@ export const NotePreviewView: React.FC<NotePreviewViewProps> = ({
           <button
             onClick={handleDownloadDocx}
             disabled={isExportingDocx}
-            className="flex-1 sm:flex-none px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+            className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors min-h-[44px] sm:min-h-0"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>{isExportingDocx ? 'Generating DOCX...' : 'Download DOCX'}</span>
+            <span>{isExportingDocx ? 'Exporting...' : 'DOCX'}</span>
           </button>
           <button
             onClick={handleDownloadPdf}
             disabled={isExportingPdf}
-            className="flex-1 sm:flex-none px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-xs font-medium shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+            className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-xs font-medium shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors min-h-[44px] sm:min-h-0"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>{isExportingPdf ? 'Generating PDF...' : 'Download PDF'}</span>
+            <span>{isExportingPdf ? 'Exporting...' : 'PDF'}</span>
           </button>
         </div>
       </div>

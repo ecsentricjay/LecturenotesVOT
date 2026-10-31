@@ -11,7 +11,7 @@ export default defineConfig(({mode}) => {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(import.meta.dirname || __dirname, '.'),
+        '@': path.resolve(import.meta.dirname, '.'),
       },
     },
     server: {
@@ -28,9 +28,25 @@ export default defineConfig(({mode}) => {
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/groq/, ''),
           configure: (proxy) => {
-            proxy.on('proxyReq', (proxyReq) => {
-              if (groqApiKey) {
-                proxyReq.setHeader('Authorization', `Bearer ${groqApiKey}`);
+            proxy.on('proxyReq', (proxyReq, req) => {
+              const clientKey = req.headers['x-groq-api-key'];
+              const keyToUse = groqApiKey || (typeof clientKey === 'string' ? clientKey : '');
+              if (keyToUse) {
+                proxyReq.setHeader('Authorization', `Bearer ${keyToUse}`);
+              }
+            });
+          },
+        },
+        '/api/groq': {
+          target: 'https://api.groq.com',
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/api\/groq/, ''),
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq, req) => {
+              const clientKey = req.headers['x-groq-api-key'];
+              const keyToUse = groqApiKey || (typeof clientKey === 'string' ? clientKey : '');
+              if (keyToUse) {
+                proxyReq.setHeader('Authorization', `Bearer ${keyToUse}`);
               }
             });
           },

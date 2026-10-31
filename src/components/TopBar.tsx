@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActiveView } from '../types';
-import { ShieldCheck, Radio, Sparkles, Mic } from 'lucide-react';
+import { Radio, Sparkles, Mic, Menu, Key } from 'lucide-react';
+import { getSavedGroqApiKey } from '../services/groqTranscription';
 
 interface TopBarProps {
   activeView: ActiveView;
@@ -8,14 +9,17 @@ interface TopBarProps {
   isRecording: boolean;
   onLoadSample: () => void;
   onOpenLiveTest: () => void;
+  onOpenMobileDrawer: () => void;
+  onOpenApiKeyModal: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
   activeView,
-  demoMode,
   isRecording,
   onLoadSample,
   onOpenLiveTest,
+  onOpenMobileDrawer,
+  onOpenApiKeyModal,
 }) => {
   const getTitle = () => {
     switch (activeView) {
@@ -28,7 +32,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       case 'history':
         return 'Session History';
       default:
-        return 'LectureNote AI';
+        return 'LectureNote';
     }
   };
 
@@ -47,22 +51,38 @@ export const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
+  const hasCustomKey = !!getSavedGroqApiKey();
+
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0">
-      <div>
-        <h2 className="text-base font-semibold text-slate-900 tracking-tight">{getTitle()}</h2>
-        <p className="text-xs text-slate-500 hidden sm:block">{getSubtitle()}</p>
+    <header className="h-14 sm:h-16 bg-white border-b border-slate-200 px-3 sm:px-8 flex items-center justify-between shrink-0 shadow-2xs">
+      {/* Left: Mobile Menu Button + View Title */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <button
+          onClick={onOpenMobileDrawer}
+          className="md:hidden p-2 rounded-lg text-slate-700 hover:text-teal-900 hover:bg-slate-100 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer -ml-1"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div className="min-w-0">
+          <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight truncate">
+            {getTitle()}
+          </h2>
+          <p className="text-xs text-slate-500 hidden lg:block truncate">{getSubtitle()}</p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Right: Actions & Status */}
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Status indicator */}
         {isRecording ? (
-          <div className="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium border border-red-200">
-            <Radio className="w-3.5 h-3.5 animate-pulse text-red-600" />
-            <span>Recording Active</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium border border-red-200 animate-pulse">
+            <Radio className="w-3.5 h-3.5 text-red-600" />
+            <span className="hidden sm:inline">Recording</span>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 text-xs text-teal-800 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200 font-medium">
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-teal-800 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>Live Mic Ready</span>
           </div>
@@ -70,18 +90,28 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         <button
           onClick={onOpenLiveTest}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-teal-800 bg-teal-50 hover:bg-teal-100 rounded-md border border-teal-200 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-teal-800 bg-teal-50 hover:bg-teal-100 rounded-lg border border-teal-200 transition-colors cursor-pointer min-h-[38px]"
+          title="Test speech with microphone"
         >
           <Mic className="w-3.5 h-3.5 text-teal-700 animate-pulse" />
-          <span>Live Speech Test</span>
+          <span className="hidden xs:inline sm:inline">Speech Test</span>
+        </button>
+
+        <button
+          onClick={onOpenApiKeyModal}
+          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:text-teal-900 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+          title="Configure Groq API Key"
+        >
+          <Key className={`w-3.5 h-3.5 ${hasCustomKey ? 'text-emerald-600' : 'text-slate-500'}`} />
+          <span className="hidden md:inline">API Key</span>
         </button>
 
         <button
           onClick={onLoadSample}
-          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-teal-800 hover:bg-slate-100 rounded-md border border-slate-200 transition-colors"
+          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-teal-800 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-          <span>Load Sample Lecture</span>
+          <span>Sample</span>
         </button>
       </div>
     </header>

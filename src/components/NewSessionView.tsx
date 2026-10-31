@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { LectureMetadata, LectureSession } from '../types';
 import sampleData from '../demo/sample.json';
-import { AudioRecorderManager } from '../services/audioRecorder';
 import { transcribeAudio } from '../services/groqTranscription';
 import { LiveSpeechRecognizer } from '../services/liveSpeechRecognizer';
 import { LiveMicTestModal } from './LiveMicTestModal';
@@ -27,6 +26,7 @@ interface NewSessionViewProps {
   onSessionGenerated: (session: LectureSession) => void;
   onLoadSample: () => void;
   onOpenLiveTest?: () => void;
+  onOpenApiKeyModal?: () => void;
 }
 
 export const NewSessionView: React.FC<NewSessionViewProps> = ({
@@ -35,6 +35,7 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
   setMetadata,
   onSessionGenerated,
   onLoadSample,
+  onOpenApiKeyModal,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -53,8 +54,7 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
   const [showPasteTab, setShowPasteTab] = useState(false);
   const [pastedText, setPastedText] = useState('');
 
-  // Refs for recorder, speech recognizer, and intervals
-  const recorderManagerRef = useRef<AudioRecorderManager | null>(null);
+  // Refs for speech recognizer and intervals
   const liveRecognizerRef = useRef<LiveSpeechRecognizer | null>(null);
   const timerIntervalRef = useRef<number | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
@@ -69,9 +69,6 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      if (recorderManagerRef.current) {
-        recorderManagerRef.current.stop();
-      }
       if (liveRecognizerRef.current) {
         liveRecognizerRef.current.stop();
       }
@@ -104,15 +101,11 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
     chunkIndexRef.current = 1;
     setElapsedSeconds(0);
 
-    const manager = new AudioRecorderManager();
-    recorderManagerRef.current = manager;
-
-    // Concurrently start live real-time speech stream
+    // Single unified speech recognizer & audio capture manager
     const recognizer = new LiveSpeechRecognizer();
     liveRecognizerRef.current = recognizer;
 
     try {
-      // Start real-time speech recognizer
       await recognizer.start({
         onInterimText: (txt) => {
           setInterimSpeech(txt);
@@ -124,20 +117,8 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
         onLevelUpdate: (lvl) => {
           setAudioLevel(lvl);
         },
-        onError: (err) => {
-          console.warn('Live speech recognition warning:', err);
-        },
-      });
-
-      // Start MediaRecorder 30s chunk pipeline
-      await manager.start({
-        onLevelUpdate: (level) => {
-          setAudioLevel((prev) => Math.max(prev, level));
-        },
-        onChunkReady: async (blob, avgRms, isSilent) => {
-          const chunkNum = chunkIndexRef.current++;
+        onChunkReady: async (blob, chunkNum, isSilent) => {
           const timestampStr = formatTimer(elapsedSeconds);
-
           if (isSilent) {
             setChunkHistory((prev) => [
               ...prev,
@@ -151,7 +132,7 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
             return;
           }
 
-          setStatusMessage(`Validating 30s chunk #${chunkNum} via Whisper...`);
+          setStatusMessage(`Transcribing 30s chunk #${chunkNum} via Groq Whisper...`);
           try {
             const chunkText = await transcribeAudio(blob, `chunk_${chunkNum}.webm`);
             if (chunkText) {
@@ -164,6 +145,11 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
                   isSilent: false,
                 },
               ]);
+              // Ensure live transcript has content even on browsers without native SpeechRecognition
+              setLiveTranscript((prev) => {
+                if (!prev) return chunkText;
+                return prev.includes(chunkText) ? prev : `${prev} ${chunkText}`;
+              });
               setStatusMessage(`Chunk #${chunkNum} recorded (${chunkText.split(' ').length} words).`);
             }
           } catch (err: any) {
@@ -171,9 +157,7 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
           }
         },
         onError: (err) => {
-          console.error('Audio recorder error:', err);
-          setErrorMessage(err.message);
-          handleStopRecording();
+          console.warn('Audio capture warning:', err);
         },
       });
 
@@ -208,16 +192,32 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
     setIsProcessingFinal(true);
     setStatusMessage('Finalizing audio stream & structuring lecture notes with NLP...');
 
-    if (recorderManagerRef.current) {
-      await recorderManagerRef.current.stop();
-      recorderManagerRef.current = null;
-    }
+    let finalAudioBlob: Blob | null = null;
     if (liveRecognizerRef.current) {
-      await liveRecognizerRef.current.stop();
+      finalAudioBlob = await liveRecognizerRef.current.stop();
       liveRecognizerRef.current = null;
     }
 
-    const currentSpoken = [liveTranscript, interimSpeech].filter(Boolean).join(' ').trim();
+    let currentSpoken = [liveTranscript, interimSpeech].filter(Boolean).join(' ').trim();
+
+    // If transcript is empty or audio was recorded, attempt final Whisper transcription
+    if (finalAudioBlob && finalAudioBlob.size > 2000) {
+      try {
+        setStatusMessage('Verifying full recording with Groq Whisper...');
+        const whisperText = await transcribeAudio(finalAudioBlob, 'lecture_recording.webm');
+        if (whisperText) {
+          // If we had no live transcript or if whisper captured additional text
+          if (!currentSpoken) {
+            currentSpoken = whisperText;
+          } else if (!currentSpoken.includes(whisperText)) {
+            currentSpoken = `${currentSpoken} ${whisperText}`;
+          }
+        }
+      } catch (err: any) {
+        console.log('Final Whisper transcription notice:', err.message);
+      }
+    }
+
     setLiveTranscript(currentSpoken);
     setInterimSpeech('');
 
@@ -270,9 +270,9 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 pb-24 md:pb-8 max-w-6xl mx-auto space-y-4 sm:space-y-6">
       {/* Live Speech Test Quick Card */}
-      <div className="bg-white rounded-xl border border-teal-200 p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-teal-50/70 via-white to-teal-50/40">
+      <div className="bg-white rounded-xl border border-teal-200 p-3.5 sm:p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-teal-50/70 via-white to-teal-50/40">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-teal-700 text-white flex items-center justify-center shrink-0 shadow-xs">
             <Mic className="w-5 h-5 animate-pulse" />
@@ -292,7 +292,7 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
 
         <button
           onClick={() => setIsLiveTestModalOpen(true)}
-          className="w-full sm:w-auto px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-98 shrink-0"
+          className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-98 shrink-0 min-h-[44px] sm:min-h-0"
         >
           <Mic className="w-4 h-4" />
           <span>Test Live Speech</span>
@@ -301,18 +301,30 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
 
       {/* Error Banner */}
       {errorMessage && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 text-red-800 text-sm animate-in fade-in">
-          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <h4 className="font-semibold text-red-900">Notice</h4>
-            <p className="mt-0.5 leading-relaxed">{errorMessage}</p>
+        <div className="p-3.5 sm:p-4 bg-red-50 border border-red-200 rounded-xl flex flex-col sm:flex-row items-start gap-3 text-red-800 text-xs sm:text-sm animate-in fade-in">
+          <div className="flex items-start gap-2.5 flex-1">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-red-900">Transcription Notice</h4>
+              <p className="mt-0.5 leading-relaxed text-xs">{errorMessage}</p>
+            </div>
           </div>
-          <button
-            onClick={() => setErrorMessage(null)}
-            className="text-xs font-medium text-red-700 hover:text-red-900 underline"
-          >
-            Dismiss
-          </button>
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 pt-1 sm:pt-0">
+            {onOpenApiKeyModal && (
+              <button
+                onClick={onOpenApiKeyModal}
+                className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-900 text-xs font-semibold rounded border border-red-300 cursor-pointer"
+              >
+                Configure Key
+              </button>
+            )}
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="text-xs font-medium text-red-700 hover:text-red-900 underline px-1 cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
 
@@ -478,7 +490,7 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
               </div>
 
               {/* 24-segment bar indicator */}
-              <div className="grid grid-cols-24 gap-1 h-3 bg-slate-200 rounded-sm p-0.5">
+              <div className="grid grid-cols-24 gap-0.5 sm:gap-1 h-3 bg-slate-200 rounded-sm p-0.5">
                 {Array.from({ length: 24 }).map((_, i) => {
                   const threshold = (i + 1) / 24;
                   const isActive = audioLevel >= threshold;

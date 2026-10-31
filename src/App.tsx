@@ -14,6 +14,7 @@ import { NotePreviewView } from './components/NotePreviewView';
 import { HistoryView } from './components/HistoryView';
 import { DefenseGuideModal } from './components/DefenseGuideModal';
 import { LiveMicTestModal } from './components/LiveMicTestModal';
+import { ApiKeyModal } from './components/ApiKeyModal';
 import {
   getSavedSessions,
   saveSession,
@@ -41,6 +42,8 @@ export default function App() {
   const [currentSession, setCurrentSession] = useState<LectureSession | null>(null);
   const [isDefenseGuideOpen, setIsDefenseGuideOpen] = useState(false);
   const [isLiveTestOpen, setIsLiveTestOpen] = useState(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   // Load saved sessions on mount
   useEffect(() => {
@@ -89,7 +92,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#F1F5F7] font-sans text-slate-900 antialiased">
-      {/* Dark Teal Sidebar (#113C3C) */}
+      {/* Sidebar: Desktop nav + Mobile bottom nav + Mobile slide drawer */}
       <Sidebar
         activeView={activeView}
         setActiveView={setActiveView}
@@ -100,17 +103,22 @@ export default function App() {
         onLoadSample={handleLoadSample}
         onOpenDefenseGuide={() => setIsDefenseGuideOpen(true)}
         onOpenLiveTest={() => setIsLiveTestOpen(true)}
+        onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
+        isMobileDrawerOpen={isMobileDrawerOpen}
+        setIsMobileDrawerOpen={setIsMobileDrawerOpen}
       />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Top Bar */}
+        {/* Top Bar with mobile drawer trigger */}
         <TopBar
           activeView={activeView}
           demoMode={demoMode}
           isRecording={false}
           onLoadSample={handleLoadSample}
           onOpenLiveTest={() => setIsLiveTestOpen(true)}
+          onOpenMobileDrawer={() => setIsMobileDrawerOpen(true)}
+          onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
         />
 
         {/* Dynamic Viewport Canvas */}
@@ -123,6 +131,7 @@ export default function App() {
               onSessionGenerated={handleSessionGenerated}
               onLoadSample={handleLoadSample}
               onOpenLiveTest={() => setIsLiveTestOpen(true)}
+              onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
             />
           )}
 
@@ -170,6 +179,12 @@ export default function App() {
         onApplyTranscript={() => {
           setActiveView('new-session');
         }}
+      />
+
+      {/* Groq API Key Setup Modal */}
+      <ApiKeyModal
+        isOpen={isApiKeyModalOpen}
+        onClose={() => setIsApiKeyModalOpen(false)}
       />
     </div>
   );

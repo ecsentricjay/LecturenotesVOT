@@ -151,15 +151,15 @@ export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in fade-in zoom-in-95">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl max-w-xl w-full max-h-[92vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in fade-in zoom-in-95">
         {/* Header */}
-        <div className="px-6 py-4 bg-[#113C3C] text-white flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#113C3C] text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Mic className="w-5 h-5 text-teal-300" />
             <div>
-              <h3 className="font-bold text-base text-white">Live Microphone Speech Test</h3>
-              <p className="text-xs text-teal-300/80">Speak a phrase to test live voice transcription</p>
+              <h3 className="font-bold text-sm sm:text-base text-white">Live Microphone Speech Test</h3>
+              <p className="text-[11px] sm:text-xs text-teal-300/80">Speak a phrase to test live voice transcription</p>
             </div>
           </div>
           <button
@@ -174,7 +174,7 @@ export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto">
           {errorMessage && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
@@ -187,17 +187,17 @@ export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
             {!isRecording ? (
               <button
                 onClick={handleStartTest}
-                className="w-20 h-20 rounded-full bg-teal-700 hover:bg-teal-800 text-white flex flex-col items-center justify-center gap-1 shadow-lg shadow-teal-700/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                className="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-teal-700 hover:bg-teal-800 text-white flex flex-col items-center justify-center gap-1 shadow-lg shadow-teal-700/20 hover:scale-105 active:scale-95 transition-all cursor-pointer min-h-[44px]"
               >
-                <Mic className="w-7 h-7" />
+                <Mic className="w-6 h-6 sm:w-7 sm:h-7" />
                 <span className="text-[10px] font-semibold uppercase tracking-wider">Speak</span>
               </button>
             ) : (
               <button
                 onClick={handleStopTest}
-                className="w-20 h-20 rounded-full bg-red-600 hover:bg-red-700 text-white flex flex-col items-center justify-center gap-1 shadow-lg shadow-red-600/30 hover:scale-105 active:scale-95 transition-all cursor-pointer animate-pulse"
+                className="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-red-600 hover:bg-red-700 text-white flex flex-col items-center justify-center gap-1 shadow-lg shadow-red-600/30 hover:scale-105 active:scale-95 transition-all cursor-pointer animate-pulse min-h-[44px]"
               >
-                <Square className="w-6 h-6 fill-white" />
+                <Square className="w-5 h-5 sm:w-6 sm:h-6 fill-white" />
                 <span className="text-[10px] font-semibold uppercase tracking-wider">Done</span>
               </button>
             )}
@@ -210,7 +210,7 @@ export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
             </div>
 
             {/* Audio Level VU Bar */}
-            <div className="w-64 mt-3">
+            <div className="w-full max-w-xs px-2 mt-3">
               <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
                 <span className="flex items-center gap-1">
                   <Volume2 className="w-3 h-3 text-teal-600" /> Mic Input Level

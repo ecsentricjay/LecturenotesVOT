@@ -2,11 +2,11 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/groq/(.*)",
-      "destination": "/api/groq/$1"
+      "source": "/groq/:path*",
+      "destination": "/api/groq/:path*"
     },
     {
-      "source": "/((?!api/|groq/).*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]

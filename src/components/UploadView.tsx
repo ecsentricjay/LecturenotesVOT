@@ -197,7 +197,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
   const currentIdx = getStepIndex(currentStep);
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 pb-24 md:pb-8 max-w-5xl mx-auto space-y-4 sm:space-y-6">
       {/* Error Alert */}
       {errorMessage && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 text-red-800 text-sm">
@@ -343,11 +343,11 @@ export const UploadView: React.FC<UploadViewProps> = ({
         </div>
 
         {/* Action button */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
           <button
             type="button"
             onClick={onLoadSample}
-            className="text-xs text-slate-600 hover:text-teal-800 font-medium flex items-center gap-1.5"
+            className="text-xs text-slate-600 hover:text-teal-800 font-medium flex items-center justify-center sm:justify-start gap-1.5 py-2 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span>Use Bundled Sample File Instead</span>
@@ -357,7 +357,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
             type="button"
             onClick={handleProcessAudio}
             disabled={currentStep !== 'idle' && currentStep !== 'completed'}
-            className="px-6 py-2.5 bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-medium text-xs rounded-lg shadow-sm flex items-center gap-2 cursor-pointer transition-all"
+            className="px-6 py-3 sm:py-2.5 bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-medium text-xs rounded-lg shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[44px]"
           >
             {currentStep !== 'idle' && currentStep !== 'completed' ? (
               <>
@@ -379,7 +379,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
             Note Generation Stepper
           </h4>
 
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3">
             {stepsList.map((step, idx) => {
               const isPast = currentIdx > idx;
               const isCurrent = currentIdx === idx;
