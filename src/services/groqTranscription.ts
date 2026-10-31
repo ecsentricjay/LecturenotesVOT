@@ -30,17 +30,73 @@ export function setSavedGroqApiKey(key: string): void {
 }
 
 /**
+ * Infers valid file extension and MIME type for Groq Whisper
+ */
+export function resolveAudioFormat(
+  audioBlob: Blob | File,
+  proposedFilename?: string
+): { filename: string; mimeType: string } {
+  const blobMime = (audioBlob.type || '').toLowerCase();
+  let ext = 'mp4';
+  let mimeType = 'audio/mp4';
+
+  if (blobMime.includes('webm')) {
+    ext = 'webm';
+    mimeType = 'audio/webm';
+  } else if (blobMime.includes('mp4')) {
+    ext = 'mp4';
+    mimeType = 'audio/mp4';
+  } else if (blobMime.includes('m4a') || blobMime.includes('aac')) {
+    ext = 'm4a';
+    mimeType = 'audio/m4a';
+  } else if (blobMime.includes('ogg') || blobMime.includes('opus')) {
+    ext = 'ogg';
+    mimeType = 'audio/ogg';
+  } else if (blobMime.includes('wav')) {
+    ext = 'wav';
+    mimeType = 'audio/wav';
+  } else if (blobMime.includes('mpeg') || blobMime.includes('mp3')) {
+    ext = 'mp3';
+    mimeType = 'audio/mpeg';
+  } else if (proposedFilename && proposedFilename.includes('.')) {
+    const rawExt = proposedFilename.split('.').pop()?.toLowerCase();
+    if (rawExt && ['webm', 'mp4', 'm4a', 'mp3', 'wav', 'ogg'].includes(rawExt)) {
+      ext = rawExt;
+      mimeType = ext === 'webm' ? 'audio/webm' : ext === 'mp4' ? 'audio/mp4' : `audio/${ext}`;
+    }
+  }
+
+  const base = (proposedFilename || 'recording').replace(/\.[^/.]+$/, '');
+  return {
+    filename: `${base}.${ext}`,
+    mimeType,
+  };
+}
+
+/**
  * Transcribes an audio Blob or File using Groq whisper-large-v3 model.
  * @param audioBlob Audio file or recording chunk
- * @param filename Filename with extension (e.g., chunk.webm, recording.mp3)
+ * @param proposedFilename Filename (extension will be adjusted to match audioBlob MIME if needed)
  * @returns Transcribed text string
  */
 export async function transcribeAudio(
   audioBlob: Blob | File,
-  filename: string = 'recording.webm'
+  proposedFilename?: string
 ): Promise<string> {
+  if (!audioBlob || audioBlob.size < 500) {
+    throw new Error('Recorded audio is empty or too short. Please speak for at least 2-3 seconds.');
+  }
+
+  const { filename, mimeType } = resolveAudioFormat(audioBlob, proposedFilename);
+
+  // Package into a valid File instance so multipart boundary contains proper content-type
+  const fileToUpload =
+    audioBlob instanceof File
+      ? audioBlob
+      : new File([audioBlob], filename, { type: audioBlob.type || mimeType });
+
   const formData = new FormData();
-  formData.append('file', audioBlob, filename);
+  formData.append('file', fileToUpload, filename);
   formData.append('model', 'whisper-large-v3');
   formData.append('language', 'en');
   formData.append('response_format', 'text');

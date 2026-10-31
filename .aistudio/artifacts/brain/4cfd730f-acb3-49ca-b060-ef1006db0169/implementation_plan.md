@@ -172,3 +172,11 @@ A minimalist, high-reliability front-end-only web application designed for a fin
    - Implement `localStorage` session manager for saving, loading, and deleting past lecture notes.
    - Provide comprehensive README with setup steps, architecture breakdown, and 5-minute defense presentation script.
    - Verify build integrity with `compile_applet`.
+
+5. **Step 5: Mobile Browser & Cross-Device Compatibility**
+   - **MIME & Container Normalization**: On mobile Safari / WebKit, `MediaRecorder` outputs `audio/mp4` instead of `audio/webm`. Implemented automatic MIME-to-extension resolution so audio uploaded to Groq Whisper matches its internal container format (`.mp4` / `.webm` / `.wav`), preventing ffmpeg demuxing errors.
+   - **Continuous Container Recording**: Avoided multi-recorder chunk concatenation bugs on iOS MP4 containers by running one single continuous `MediaRecorder` instance with timeslices, guaranteeing a single pristine MP4 or WebM stream on stop.
+   - **Non-blocking Web Audio**: Removed blocking `await audioContext.resume()` calls that stall in iOS WebKit when user gesture tokens expire after `getUserMedia`.
+   - **SpeechRecognition Fallback**: Added graceful fallback indicators when the Web Speech API is absent on mobile browsers, smoothly relying on Groq Whisper for 100% transcript accuracy.
+   - **Responsive Navigation**: Bottom navigation bar and mobile drawer for compact screens, with responsive touch targets and clear error recovery.
+

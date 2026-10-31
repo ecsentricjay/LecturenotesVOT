@@ -134,7 +134,8 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
 
           setStatusMessage(`Transcribing 30s chunk #${chunkNum} via Groq Whisper...`);
           try {
-            const chunkText = await transcribeAudio(blob, `chunk_${chunkNum}.webm`);
+            const ext = recognizer.getAudioExtension();
+            const chunkText = await transcribeAudio(blob, `chunk_${chunkNum}.${ext}`);
             if (chunkText) {
               setChunkHistory((prev) => [
                 ...prev,
@@ -153,7 +154,7 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
               setStatusMessage(`Chunk #${chunkNum} recorded (${chunkText.split(' ').length} words).`);
             }
           } catch (err: any) {
-            console.log('Chunk proxy transcription notice:', err.message);
+            console.warn('Chunk proxy transcription notice:', err.message);
           }
         },
         onError: (err) => {
@@ -193,7 +194,9 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
     setStatusMessage('Finalizing audio stream & structuring lecture notes with NLP...');
 
     let finalAudioBlob: Blob | null = null;
+    let audioExt = 'mp4';
     if (liveRecognizerRef.current) {
+      audioExt = liveRecognizerRef.current.getAudioExtension();
       finalAudioBlob = await liveRecognizerRef.current.stop();
       liveRecognizerRef.current = null;
     }
@@ -201,10 +204,10 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
     let currentSpoken = [liveTranscript, interimSpeech].filter(Boolean).join(' ').trim();
 
     // If transcript is empty or audio was recorded, attempt final Whisper transcription
-    if (finalAudioBlob && finalAudioBlob.size > 2000) {
+    if (finalAudioBlob && finalAudioBlob.size > 500) {
       try {
-        setStatusMessage('Verifying full recording with Groq Whisper...');
-        const whisperText = await transcribeAudio(finalAudioBlob, 'lecture_recording.webm');
+        setStatusMessage('Transcribing full recording with Groq Whisper...');
+        const whisperText = await transcribeAudio(finalAudioBlob, `lecture_recording.${audioExt}`);
         if (whisperText) {
           // If we had no live transcript or if whisper captured additional text
           if (!currentSpoken) {
@@ -214,7 +217,10 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
           }
         }
       } catch (err: any) {
-        console.log('Final Whisper transcription notice:', err.message);
+        console.warn('Final Whisper transcription notice:', err.message);
+        if (!currentSpoken) {
+          setErrorMessage(err.message || 'Whisper transcription failed.');
+        }
       }
     }
 
@@ -672,6 +678,7 @@ export const NewSessionView: React.FC<NewSessionViewProps> = ({
       <LiveMicTestModal
         isOpen={isLiveTestModalOpen}
         onClose={() => setIsLiveTestModalOpen(false)}
+        onOpenApiKeyModal={onOpenApiKeyModal}
         onApplyTranscript={(text) => {
           setLiveTranscript((prev) => (prev ? `${prev} ${text}` : text));
           setStatusMessage('Appended live speech test to transcript.');

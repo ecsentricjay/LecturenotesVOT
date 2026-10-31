@@ -176,6 +176,7 @@ export default function App() {
       <LiveMicTestModal
         isOpen={isLiveTestOpen}
         onClose={() => setIsLiveTestOpen(false)}
+        onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
         onApplyTranscript={() => {
           setActiveView('new-session');
         }}

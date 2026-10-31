@@ -19,19 +19,22 @@ interface LiveMicTestModalProps {
   isOpen: boolean;
   onClose: () => void;
   onApplyTranscript?: (text: string) => void;
+  onOpenApiKeyModal?: () => void;
 }
 
 export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
   isOpen,
   onClose,
   onApplyTranscript,
+  onOpenApiKeyModal,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [spokenWords, setSpokenWords] = useState<string[]>([]);
   const [interimWord, setInterimWord] = useState('');
+  const [isSpeechApiActive, setIsSpeechApiActive] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [statusMessage, setStatusMessage] = useState('Click "Start Test" and speak clearly into your mic.');
+  const [statusMessage, setStatusMessage] = useState('Tap "Speak" and speak clearly into your mic.');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [whisperResult, setWhisperResult] = useState<string | null>(null);
   const [isWhisperVerifying, setIsWhisperVerifying] = useState(false);
@@ -65,6 +68,7 @@ export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
     setInterimWord('');
     setWhisperResult(null);
     setElapsedSeconds(0);
+    setIsSpeechApiActive(false);
     setStatusMessage('Listening... speak now!');
 
     const recognizer = new LiveSpeechRecognizer();
@@ -83,6 +87,9 @@ export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
         onLevelUpdate: (lvl) => {
           setAudioLevel(lvl);
         },
+        onSpeechRecognitionActive: (active) => {
+          setIsSpeechApiActive(active);
+        },
         onError: (err) => {
           setErrorMessage(err);
         },
@@ -93,7 +100,7 @@ export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
         setElapsedSeconds((s) => s + 1);
       }, 1000);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Could not start microphone.');
+      setErrorMessage(err.message || 'Could not start microphone on this device.');
       setIsRecording(false);
     }
   };
@@ -106,31 +113,34 @@ export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
 
     setIsRecording(false);
     setAudioLevel(0);
-    setStatusMessage('Speech captured! Finalizing transcription...');
+    setStatusMessage('Audio recorded! Transcribing...');
 
     if (recognizerRef.current) {
-      const audioBlob = await recognizerRef.current.stop();
+      const recognizer = recognizerRef.current;
+      const audioBlob = await recognizer.stop();
       recognizerRef.current = null;
 
-      // Also attempt Groq Whisper verification if audio blob is present
-      if (audioBlob && audioBlob.size > 2000) {
+      if (audioBlob && audioBlob.size > 500) {
         setIsWhisperVerifying(true);
-        setStatusMessage('Verifying via Groq Whisper API (whisper-large-v3)...');
+        setStatusMessage('Transcribing with Groq Whisper API (whisper-large-v3)...');
         try {
-          const whisperText = await transcribeAudio(audioBlob, 'test_sample.webm');
+          const extension = recognizer.getAudioExtension();
+          const whisperText = await transcribeAudio(audioBlob, `test_sample.${extension}`);
           if (whisperText) {
             setWhisperResult(whisperText);
-            setStatusMessage('Transcription verified via Groq Whisper!');
+            setStatusMessage('Transcription complete via Groq Whisper!');
+          } else {
+            setStatusMessage('Transcription finished (no speech detected).');
           }
         } catch (err: any) {
-          console.log('Groq proxy verification note:', err.message);
-          // If Groq fails (e.g. no key or network), our client speech transcript is still preserved!
-          setStatusMessage('Live speech transcription complete.');
+          console.warn('Groq verification error:', err);
+          setErrorMessage(err.message || 'Whisper transcription failed.');
+          setStatusMessage('Transcription attempt finished.');
         } finally {
           setIsWhisperVerifying(false);
         }
       } else {
-        setStatusMessage('Live speech transcription complete.');
+        setStatusMessage('Recording was too short to transcribe.');
       }
     }
   };
@@ -176,9 +186,22 @@ export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
         {/* Body */}
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto">
           {errorMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-xs flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-              <div className="flex-1">{errorMessage}</div>
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-xs flex flex-col sm:flex-row items-start justify-between gap-2">
+              <div className="flex items-start gap-2 flex-1">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">{errorMessage}</div>
+              </div>
+              {onOpenApiKeyModal && (errorMessage.includes('401') || errorMessage.includes('Key')) && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenApiKeyModal();
+                  }}
+                  className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[11px] font-semibold shrink-0 cursor-pointer"
+                >
+                  Configure Key
+                </button>
+              )}
             </div>
           )}
 
@@ -258,7 +281,9 @@ export const LiveMicTestModal: React.FC<LiveMicTestModalProps> = ({
               ) : (
                 <div className="py-4 text-center text-slate-400 text-xs italic">
                   {isRecording
-                    ? 'Start speaking into your microphone now...'
+                    ? isSpeechApiActive
+                      ? 'Start speaking into your microphone now...'
+                      : 'Audio waveform is active! Speak your phrase and tap Done to transcribe via Groq Whisper.'
                     : 'Your transcribed words will appear here in real time.'}
                 </div>
               )}
