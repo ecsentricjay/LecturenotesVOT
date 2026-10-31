@@ -93,4 +93,3 @@ Open your browser to `http://localhost:3000`.
 │       ├── HistoryView.tsx   # Saved session archives & management
 │       └── DefenseGuideModal.tsx # 5-minute defense presentation walkthrough
 ```
-"# LecturenotesVOT" 
